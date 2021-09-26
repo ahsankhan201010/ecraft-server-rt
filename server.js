@@ -74,6 +74,22 @@ db.once("open", () => {
       }
     }
   });
+
+  //watching messages
+  const messageCollection = db.collection("messages");
+  const messageChangeStream = messageCollection.watch();
+  messageChangeStream.on("change", (change) => {
+    console.log(change)
+    if(change.operationType === "insert") {
+      var doc = change.fullDocument;
+      var {receiver} = doc;
+      var connectedUser = getUser(receiver)
+      console.log(connectedUser)
+      if(connectedUser) {
+        io.to(connectedUser.socketId).emit("message",doc)  //server -> client (event)
+      }
+    }
+  });
 });
 
 
